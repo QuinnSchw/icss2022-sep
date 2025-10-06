@@ -45,5 +45,13 @@ ASSIGNMENT_OPERATOR: ':=';
 
 
 //--- PARSER: ---
-stylesheet: EOF;
+stylesheet: parse | EOF;
+
+parse: pre OPEN_BRACE type CLOSE_BRACE ;
+type: color SEMICOLON | measurements SEMICOLON | color SEMICOLON measurements SEMICOLON ;
+measurements: LOWER_IDENT COLON measureType;
+measureType: PIXELSIZE | PERCENTAGE;
+color: colorType COLON COLOR ;
+colorType: LOWER_IDENT | LOWER_IDENT MIN;
+pre: LOWER_IDENT | ID_IDENT | CLASS_IDENT ;
 

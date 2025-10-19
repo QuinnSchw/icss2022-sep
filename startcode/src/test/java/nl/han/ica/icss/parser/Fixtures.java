@@ -38,7 +38,7 @@ public class Fixtures {
 				.addChild((new Declaration("color"))
 						.addChild(new ColorLiteral("#ff0000")))
 		);
-		/*
+		/* --> demo
 		#menu {
 			width: 520px;
 		}

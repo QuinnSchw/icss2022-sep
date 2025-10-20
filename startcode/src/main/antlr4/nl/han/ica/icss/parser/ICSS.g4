@@ -45,7 +45,7 @@ ASSIGNMENT_OPERATOR: ':=';
 
 
 //--- PARSER: ---
-stylesheet: icssParts EOF;
+stylesheet: stylerule EOF;
 
 //enter: maak ASTNode en zet deze op stack --> exit: haal ASTNode van stack voeg toe aan node op de stack. Als kind A-- B -- C. als je a eruit haalt gaan de kinderen automatisch mee
 
@@ -55,17 +55,24 @@ stylesheet: icssParts EOF;
 // declaration: property COLON pixel_literal SEMICOLON
 // property: LOWER_IDENT;
 // pixel_literal: PIXELSIZE;
+// expression:
+// PIXELSIZE #pixelLiteral |
+// COLOR #colorLiteral;
 
 //==> LOWER_IDENT: [a-z] [a-z0-9]* ('-' [a-z0-9]+)*; potentieel voor in de toekomst TODO
+// stylerule in grammatica zetten, want dan kun je een enter en exit maken. vgm doe je dit nogsteeds zelf.
+//
 
-icssParts: (constant | pre OPEN_BRACE data CLOSE_BRACE)*;
-data: (color SEMICOLON | measurements SEMICOLON)*;
-measurements: LOWER_IDENT COLON measureType;
-measureType: PIXELSIZE | PERCENTAGE;
-color: colorType COLON COLOR ;
-colorType: LOWER_IDENT | LOWER_IDENT MIN LOWER_IDENT;
-pre: LOWER_IDENT | ID_IDENT | CLASS_IDENT ;
+stylerule: (pre OPEN_BRACE (declaration)+ CLOSE_BRACE)+;
+declaration:  propertyName COLON expression SEMICOLON;
+propertyName: LOWER_IDENT;
+ expression:
+ PIXELSIZE #PixelLiteral |
+ PERCENTAGE #PercentageLiteral |
+ COLOR #ColorLiteral;
+
+pre: LOWER_IDENT | ID_IDENT | CLASS_IDENT #ClassSelector;
 constant: CAPITAL_IDENT ASSIGNMENT_OPERATOR constType SEMICOLON;
-constType: bool | COLOR | measureType;
+constType: bool | COLOR |;
 bool: TRUE | FALSE;
 

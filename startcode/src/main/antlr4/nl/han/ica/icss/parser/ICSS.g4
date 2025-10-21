@@ -62,7 +62,8 @@ stylesheet: stylerule EOF;
 //==> LOWER_IDENT: [a-z] [a-z0-9]* ('-' [a-z0-9]+)*; potentieel voor in de toekomst TODO
 // stylerule in grammatica zetten, want dan kun je een enter en exit maken. vgm doe je dit nogsteeds zelf.
 //
-
+//variableAssignment: CAPITAL_IDENT ASSIGNMENT_OPERATOR constType SEMICOLON;
+//variableReference:
 stylerule: (pre OPEN_BRACE (declaration)+ CLOSE_BRACE)+;
 declaration:  propertyName COLON expression SEMICOLON;
 propertyName: LOWER_IDENT;
@@ -72,7 +73,7 @@ propertyName: LOWER_IDENT;
  COLOR #ColorLiteral;
 
 pre: LOWER_IDENT | ID_IDENT | CLASS_IDENT #ClassSelector;
-constant: CAPITAL_IDENT ASSIGNMENT_OPERATOR constType SEMICOLON;
+//constant: CAPITAL_IDENT ASSIGNMENT_OPERATOR constType SEMICOLON;
 constType: bool | COLOR |;
 bool: TRUE | FALSE;
 

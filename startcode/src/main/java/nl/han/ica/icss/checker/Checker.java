@@ -2,6 +2,7 @@ package nl.han.ica.icss.checker;
 
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
+import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.types.ExpressionType;
 
 import java.util.HashMap;
@@ -14,7 +15,7 @@ public class Checker {
 
     public void check(AST ast) {
         checkStylesheet(ast.root);
-        // variableTypes = new HANLinkedList<>();
+         variableTypes = new LinkedList<>();
 
     }
 
@@ -34,6 +35,10 @@ public class Checker {
 if(declaration.property.name.equals("width")){
     if(declaration.expression instanceof ColorLiteral){
         declaration.setError("Property width: color not allowed"); //--> hierdoor wordt declaration dan rood in de tree
+    }
+} else if(declaration.property.name.equals("color")){
+    if(!(declaration.expression instanceof ColorLiteral)){
+        declaration.setError("Property color: not allowed"); //--> je moet nakijken of iets hetgeen is wat je verwacht. Anders foutmelding.
     }
 }
     }

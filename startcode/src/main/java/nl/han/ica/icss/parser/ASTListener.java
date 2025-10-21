@@ -50,6 +50,18 @@ public class ASTListener extends ICSSBaseListener {
         currentContainer.push(declaration);
     }
 
+    @Override
+    public void enterPropertyName(ICSSParser.PropertyNameContext ctx) {
+        PropertyName propertyName = new PropertyName(ctx.getText());
+        currentContainer.push(propertyName);
+    }
+
+    @Override
+    public void exitPropertyName(ICSSParser.PropertyNameContext ctx) {
+        PropertyName propertyName = (PropertyName) currentContainer.pop();
+        currentContainer.peek().addChild(propertyName);
+
+    }
 
     @Override
     public void enterColorLiteral(ICSSParser.ColorLiteralContext ctx) {
@@ -85,14 +97,11 @@ public class ASTListener extends ICSSBaseListener {
         currentContainer.peek().addChild(literal);
     }
 
-
-
     @Override
     public void exitDeclaration(ICSSParser.DeclarationContext ctx) {
         Declaration declaration = (Declaration) currentContainer.pop();
         currentContainer.peek().addChild(declaration);
     }
-
 
     @Override
     public void exitStylerule(ICSSParser.StyleruleContext ctx) {

@@ -10,7 +10,7 @@ import java.util.LinkedList;
 
 
 public class Checker {
-
+// --> was eerst IHANLinkedList. misschien toevoegen
     private LinkedList<HashMap<String, ExpressionType>> variableTypes; // Hashmap houdt bij welke types variabelen zijn. --> handig ook voor het constant probleem
 
     public void check(AST ast) {

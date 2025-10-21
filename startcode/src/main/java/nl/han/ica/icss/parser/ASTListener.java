@@ -4,9 +4,14 @@ package nl.han.ica.icss.parser;
 import nl.han.ica.datastructures.HANStack;
 import nl.han.ica.datastructures.IHANStack;
 import nl.han.ica.icss.ast.*;
+import nl.han.ica.icss.ast.literals.BoolLiteral;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
 import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
+import nl.han.ica.icss.ast.operations.AddOperation;
+import nl.han.ica.icss.ast.operations.MultiplyOperation;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
+import nl.han.ica.icss.ast.selectors.TagSelector;
 
 /**
  * This class extracts the ICSS Abstract Syntax Tree from the Antlr Parse tree.
@@ -33,7 +38,21 @@ public class ASTListener extends ICSSBaseListener {
         Stylesheet stylesheet = new Stylesheet();
         currentContainer.push(stylesheet);
     }
+    @Override
+    public void enterVariableAssignment(ICSSParser.VariableAssignmentContext ctx) {
+        VariableAssignment variableAssignment = new VariableAssignment();
+        currentContainer.push(variableAssignment);
 
+        VariableReference variableReference = new VariableReference(ctx.getChild(0).getText());
+        System.out.println("reference=" + variableReference);
+        variableAssignment.name = variableReference;
+    }
+
+    @Override
+    public void exitVariableAssignment(ICSSParser.VariableAssignmentContext ctx) {
+        VariableAssignment variableAssignment = (VariableAssignment) currentContainer.pop();
+        currentContainer.peek().addChild(variableAssignment);
+    }
 
     @Override
     public void enterStylerule(ICSSParser.StyleruleContext ctx) {
@@ -44,6 +63,33 @@ public class ASTListener extends ICSSBaseListener {
         Stylerule stylerule = new Stylerule();
         currentContainer.push(stylerule);
     }
+
+
+
+    @Override
+    public void enterVariableReference(ICSSParser.VariableReferenceContext ctx) {
+        VariableReference variableReference = new VariableReference(ctx.getText());
+        currentContainer.push(variableReference);
+    }
+
+    @Override
+    public void exitVariableReference(ICSSParser.VariableReferenceContext ctx) {
+        VariableReference variableReference = (VariableReference) currentContainer.pop();
+        currentContainer.peek().addChild(variableReference);
+    }
+
+    @Override
+    public void enterTagSelector(ICSSParser.TagSelectorContext ctx) {
+        TagSelector tagSelector = new TagSelector(ctx.getText());
+        currentContainer.push(tagSelector);
+    }
+
+    @Override
+    public void exitTagSelector(ICSSParser.TagSelectorContext ctx) {
+        TagSelector tagSelector = (TagSelector) currentContainer.pop();
+        currentContainer.peek().addChild(tagSelector);
+    }
+
     @Override
     public void enterDeclaration(ICSSParser.DeclarationContext ctx) {
         Declaration declaration = new Declaration();
@@ -61,6 +107,18 @@ public class ASTListener extends ICSSBaseListener {
         PropertyName propertyName = (PropertyName) currentContainer.pop();
         currentContainer.peek().addChild(propertyName);
 
+    }
+
+    @Override
+    public void enterBoolLiteral(ICSSParser.BoolLiteralContext ctx) {
+        BoolLiteral boolLiteral = new BoolLiteral(ctx.getText());
+        currentContainer.push(boolLiteral);
+    }
+
+    @Override
+    public void exitBoolLiteral(ICSSParser.BoolLiteralContext ctx) {
+        BoolLiteral literal = (BoolLiteral) currentContainer.pop();
+        currentContainer.peek().addChild(literal);
     }
 
     @Override
@@ -95,6 +153,42 @@ public class ASTListener extends ICSSBaseListener {
     public void exitPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
         PixelLiteral literal = (PixelLiteral) currentContainer.pop();
         currentContainer.peek().addChild(literal);
+    }
+
+    @Override
+    public void enterAddOperation(ICSSParser.AddOperationContext ctx) {
+        AddOperation operation = new AddOperation();
+        currentContainer.push(operation);
+    }
+
+    @Override
+    public void exitAddOperation(ICSSParser.AddOperationContext ctx) {
+        AddOperation operation = (AddOperation) currentContainer.pop();
+        currentContainer.peek().addChild(operation);
+    }
+
+    @Override
+    public void enterMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
+        MultiplyOperation operation = new MultiplyOperation();
+        currentContainer.push(operation);
+    }
+
+    @Override
+    public void exitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
+        MultiplyOperation operation = (MultiplyOperation) currentContainer.pop();
+        currentContainer.peek().addChild(operation);
+    }
+
+    @Override
+    public void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
+        SubtractOperation operation = new SubtractOperation();
+        currentContainer.push(operation);
+    }
+
+    @Override
+    public void exitSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
+        SubtractOperation operation = (SubtractOperation) currentContainer.pop();
+        currentContainer.peek().addChild(operation);
     }
 
     @Override

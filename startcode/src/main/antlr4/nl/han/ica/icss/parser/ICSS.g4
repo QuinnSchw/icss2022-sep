@@ -76,9 +76,9 @@ stylesheet: (variableAssignment | stylerule )+ EOF;
 
 
 
-stylerule: (tagSelector OPEN_BRACE (declaration)+ CLOSE_BRACE)+;
+stylerule: tagSelector OPEN_BRACE (declaration)+ CLOSE_BRACE;
 declaration:  propertyName COLON expression SEMICOLON;
-propertyName: LOWER_IDENT;
+
  expression:
     expression PLUS expression #AddOperation |
     expression MUL expression #MultiplyOperation |
@@ -87,10 +87,11 @@ propertyName: LOWER_IDENT;
     PIXELSIZE #PixelLiteral |
     PERCENTAGE #PercentageLiteral |
     COLOR #ColorLiteral|
-    CAPITAL_IDENT #VariableReference;
+    CAPITAL_IDENT #VariableReference |
+    SCALAR #ScalarLiteral;
 
 
-
+propertyName: ('background-color' | 'color'| 'width'| 'height');
 tagSelector: LOWER_IDENT | ID_IDENT | CLASS_IDENT #ClassSelector;
 variableAssignment: CAPITAL_IDENT ASSIGNMENT_OPERATOR expression SEMICOLON;
 bool: TRUE | FALSE;

@@ -4,10 +4,7 @@ package nl.han.ica.icss.parser;
 import nl.han.ica.datastructures.HANStack;
 import nl.han.ica.datastructures.IHANStack;
 import nl.han.ica.icss.ast.*;
-import nl.han.ica.icss.ast.literals.BoolLiteral;
-import nl.han.ica.icss.ast.literals.ColorLiteral;
-import nl.han.ica.icss.ast.literals.PercentageLiteral;
-import nl.han.ica.icss.ast.literals.PixelLiteral;
+import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
@@ -177,6 +174,18 @@ public class ASTListener extends ICSSBaseListener {
     public void exitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
         MultiplyOperation operation = (MultiplyOperation) currentContainer.pop();
         currentContainer.peek().addChild(operation);
+    }
+
+    @Override
+    public void enterScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
+        ScalarLiteral literal = new ScalarLiteral(ctx.getText());
+        currentContainer.push(literal);
+    }
+
+    @Override
+    public void exitScalarLiteral(ICSSParser.ScalarLiteralContext ctx) {
+        ScalarLiteral literal = (ScalarLiteral) currentContainer.pop();
+        currentContainer.peek().addChild(literal);
     }
 
     @Override

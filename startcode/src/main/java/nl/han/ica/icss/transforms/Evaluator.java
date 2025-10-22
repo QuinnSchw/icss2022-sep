@@ -31,8 +31,12 @@ public class Evaluator implements Transform {
 
     private void applyStyleSheet(Stylesheet node) {
 
-
-        applyStylerule((Stylerule) node.getChildren().get(0)); //--> wij moeten dit niet zo doen aangezien wij meer dan 1 kind hebben.
+for(ASTNode child: node.getChildren()) {
+    if(child instanceof Stylerule){
+        applyStylerule((Stylerule)child);
+    }
+}
+         //--> wij moeten dit niet zo doen aangezien wij meer dan 1 kind hebben.
     }
 
     private void applyStylerule(Stylerule node) {
@@ -48,27 +52,92 @@ public class Evaluator implements Transform {
     }
 
     private Literal evalExpression(Expression expression) { //--> in ons geval niet goed, want het kan vanalles zijn. Elke soort literal.(was eerst PixelLiteral TODO
-        if (expression instanceof PixelLiteral) {
-            return (PixelLiteral) expression;
-
-        } else if (expression instanceof PercentageLiteral) {
-            return (PercentageLiteral) expression;
-
-        } else if (expression instanceof ColorLiteral) {
-            return (ColorLiteral) expression;
-
-        } else if (expression instanceof AddOperation) {
-            return evalAddOperation((AddOperation) expression);
-
-        } else if (expression instanceof SubtractOperation) {
-            return evalSubtractOperation((SubtractOperation) expression);
-
-        } else if (expression instanceof MultiplyOperation) {
-            return evalMultiplyOperation((MultiplyOperation) expression);
-
+        if (expression instanceof Literal) {
+            return (Literal) expression;
+        }else if (expression instanceof Operation) {
+            return evalOperation((Operation) expression);
         }
         return (Literal) expression;
     }
+
+    private Literal evalOperation(Operation expression) {
+        Literal left = evalExpression(expression.lhs);
+        Literal right = evalExpression(expression.rhs);
+
+
+        if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
+            PixelLiteral l = (PixelLiteral) left;
+            PixelLiteral r = (PixelLiteral) right;
+
+            if(expression instanceof AddOperation) {
+                return new PixelLiteral(l.value + r.value);
+            }
+            if(expression instanceof SubtractOperation) {
+                return new PixelLiteral(l.value - r.value);
+            }
+
+        }
+
+        if (left instanceof PercentageLiteral && right instanceof PercentageLiteral) {
+
+            PercentageLiteral l = (PercentageLiteral) left;
+            PercentageLiteral r = (PercentageLiteral) right;
+
+            if(expression instanceof AddOperation) {
+                return new PercentageLiteral(l.value + r.value);
+            }
+            if(expression instanceof SubtractOperation) {
+                return new PercentageLiteral(l.value - r.value);
+            }
+        }
+        if (left instanceof ScalarLiteral && right instanceof PercentageLiteral) {
+
+            ScalarLiteral l = (ScalarLiteral) left;
+            PercentageLiteral r = (PercentageLiteral) right;
+
+            if(expression instanceof MultiplyOperation) {
+                return new PercentageLiteral(l.value * r.value);
+            }
+
+        }
+        if (left instanceof PercentageLiteral && right instanceof  ScalarLiteral) {
+
+            PercentageLiteral l = (PercentageLiteral) left;
+            ScalarLiteral r = (ScalarLiteral) right;
+
+            if(expression instanceof MultiplyOperation) {
+                return new PercentageLiteral(l.value * r.value);
+            }
+
+        }
+        if (left instanceof ScalarLiteral && right instanceof PixelLiteral) {
+
+            ScalarLiteral l = (ScalarLiteral) left;
+            PixelLiteral r = (PixelLiteral) right;
+
+            if(expression instanceof MultiplyOperation) {
+                return new PixelLiteral(l.value * r.value);
+            }
+
+        }
+        if (left instanceof PixelLiteral && right instanceof  ScalarLiteral) {
+
+            PixelLiteral l = (PixelLiteral) left;
+            ScalarLiteral r = (ScalarLiteral) right;
+
+            if(expression instanceof MultiplyOperation) {
+                return new PixelLiteral(l.value * r.value);
+            }
+
+        }
+        return null;
+
+    }
+
+
+
+
+
 //    private PixelLiteral evalExpression(Expression expression) { //--> in ons geval niet goed, want het kan vanalles zijn. Elke soort literal.(was eerst PixelLiteral TODO
 //        if(expression instanceof PixelLiteral){
 //            return (PixelLiteral) expression;
@@ -77,7 +146,7 @@ public class Evaluator implements Transform {
 //        }
 //    }
 
-    private Literal evalAddOperation(AddOperation expression) {
+    private Literal evalAddperation(AddOperation expression) {
         Literal left = evalExpression(expression.lhs);
         Literal right = evalExpression(expression.rhs);
 

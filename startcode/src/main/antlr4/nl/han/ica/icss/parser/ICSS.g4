@@ -45,7 +45,7 @@ ASSIGNMENT_OPERATOR: ':=';
 
 
 //--- PARSER: ---
-stylesheet: (variableAssignment | stylerule )+ EOF;
+
 
 //enter: maak ASTNode en zet deze op stack --> exit: haal ASTNode van stack voeg toe aan node op de stack. Als kind A-- B -- C. als je a eruit haalt gaan de kinderen automatisch mee
 
@@ -75,7 +75,7 @@ stylesheet: (variableAssignment | stylerule )+ EOF;
 
 
 
-
+stylesheet: (variableAssignment | stylerule )+ EOF;
 stylerule: tagSelector OPEN_BRACE (declaration)+ CLOSE_BRACE;
 declaration:  propertyName COLON expression SEMICOLON;
 

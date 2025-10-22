@@ -24,38 +24,65 @@ public class Evaluator implements Transform {
     @Override
     public void apply(AST ast) {
         variableValues = new LinkedList<>();
-
+        variableValues.push(new HashMap<>());
         applyStyleSheet(ast.root);
+        variableValues.pop();
+
 
     }
 
     private void applyStyleSheet(Stylesheet node) {
 
-for(ASTNode child: node.getChildren()) {
-    if(child instanceof Stylerule){
-        applyStylerule((Stylerule)child);
-    }
-}
-         //--> wij moeten dit niet zo doen aangezien wij meer dan 1 kind hebben.
-    }
-
-    private void applyStylerule(Stylerule node) {
         for (ASTNode child : node.getChildren()) {
-            if (child instanceof Declaration) {
-                applyDeclaration((Declaration) child);
+            if (child instanceof VariableAssignment) {
+                applyVariableAssignment((VariableAssignment) child);
+            } else if (child instanceof Stylerule) {
+                    applyStylerule((Stylerule) child);
+                }
             }
+
         }
-    }
 
-    private void applyDeclaration(Declaration node) { //Je wil de expression berekenen
-        node.expression = evalExpression(node.expression);
-    }
+        private void applyStylerule (Stylerule node){
+            variableValues.push(new HashMap<>());
 
-    private Literal evalExpression(Expression expression) { //--> in ons geval niet goed, want het kan vanalles zijn. Elke soort literal.(was eerst PixelLiteral TODO
+            for (ASTNode child : node.getChildren()) {
+                if (child instanceof Declaration) {
+                    applyDeclaration((Declaration) child);
+                } else if (child instanceof VariableAssignment) {
+                    applyVariableAssignment((VariableAssignment) child);
+                }
+            }
+
+            variableValues.pop();
+        }
+
+        private void applyDeclaration (Declaration node){
+            node.expression = evalExpression(node.expression);
+        }
+
+
+       private void applyVariableAssignment (VariableAssignment node){
+            String varName = node.name.name;
+
+           Literal value = evalExpression(node.expression);
+
+            variableValues.peek().put(varName, value);
+       }
+
+
+    private Literal evalExpression(Expression expression) {
         if (expression instanceof Literal) {
             return (Literal) expression;
-        }else if (expression instanceof Operation) {
+        } else if (expression instanceof Operation) {
             return evalOperation((Operation) expression);
+        } else if (expression instanceof VariableReference) {
+                VariableReference ref = (VariableReference) expression;
+                for (HashMap<String, Literal> scope : variableValues) {
+                    if (scope.containsKey(ref.name)) {
+                        return scope.get(ref.name);
+                    }
+                }
         }
         return (Literal) expression;
     }
@@ -69,10 +96,10 @@ for(ASTNode child: node.getChildren()) {
             PixelLiteral l = (PixelLiteral) left;
             PixelLiteral r = (PixelLiteral) right;
 
-            if(expression instanceof AddOperation) {
+            if (expression instanceof AddOperation) {
                 return new PixelLiteral(l.value + r.value);
             }
-            if(expression instanceof SubtractOperation) {
+            if (expression instanceof SubtractOperation) {
                 return new PixelLiteral(l.value - r.value);
             }
 
@@ -83,10 +110,10 @@ for(ASTNode child: node.getChildren()) {
             PercentageLiteral l = (PercentageLiteral) left;
             PercentageLiteral r = (PercentageLiteral) right;
 
-            if(expression instanceof AddOperation) {
+            if (expression instanceof AddOperation) {
                 return new PercentageLiteral(l.value + r.value);
             }
-            if(expression instanceof SubtractOperation) {
+            if (expression instanceof SubtractOperation) {
                 return new PercentageLiteral(l.value - r.value);
             }
         }
@@ -95,17 +122,17 @@ for(ASTNode child: node.getChildren()) {
             ScalarLiteral l = (ScalarLiteral) left;
             PercentageLiteral r = (PercentageLiteral) right;
 
-            if(expression instanceof MultiplyOperation) {
+            if (expression instanceof MultiplyOperation) {
                 return new PercentageLiteral(l.value * r.value);
             }
 
         }
-        if (left instanceof PercentageLiteral && right instanceof  ScalarLiteral) {
+        if (left instanceof PercentageLiteral && right instanceof ScalarLiteral) {
 
             PercentageLiteral l = (PercentageLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
 
-            if(expression instanceof MultiplyOperation) {
+            if (expression instanceof MultiplyOperation) {
                 return new PercentageLiteral(l.value * r.value);
             }
 
@@ -115,17 +142,17 @@ for(ASTNode child: node.getChildren()) {
             ScalarLiteral l = (ScalarLiteral) left;
             PixelLiteral r = (PixelLiteral) right;
 
-            if(expression instanceof MultiplyOperation) {
+            if (expression instanceof MultiplyOperation) {
                 return new PixelLiteral(l.value * r.value);
             }
 
         }
-        if (left instanceof PixelLiteral && right instanceof  ScalarLiteral) {
+        if (left instanceof PixelLiteral && right instanceof ScalarLiteral) {
 
             PixelLiteral l = (PixelLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
 
-            if(expression instanceof MultiplyOperation) {
+            if (expression instanceof MultiplyOperation) {
                 return new PixelLiteral(l.value * r.value);
             }
 
@@ -133,71 +160,6 @@ for(ASTNode child: node.getChildren()) {
         return null;
 
     }
-
-
-
-
-
-//    private PixelLiteral evalExpression(Expression expression) { //--> in ons geval niet goed, want het kan vanalles zijn. Elke soort literal.(was eerst PixelLiteral TODO
-//        if(expression instanceof PixelLiteral){
-//            return (PixelLiteral) expression;
-//        } else{
-//            return evalAddOperation((AddOperation)expression);
-//        }
-//    }
-
-    private Literal evalAddperation(AddOperation expression) {
-        Literal left = evalExpression(expression.lhs);
-        Literal right = evalExpression(expression.rhs);
-
-        if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
-            PixelLiteral l = (PixelLiteral) left;
-            PixelLiteral r = (PixelLiteral) right;
-            return new PixelLiteral(l.value + r.value);
-        }
-
-        if (left instanceof PercentageLiteral && right instanceof PercentageLiteral) {
-            PercentageLiteral l = (PercentageLiteral) left;
-            PercentageLiteral r = (PercentageLiteral) right;
-            return new PercentageLiteral(l.value + r.value);
-        }
-
-        return left;
-    }
-
-    private Literal evalSubtractOperation(SubtractOperation expression) {
-        Literal left = evalExpression(expression.lhs);
-        Literal right = evalExpression(expression.rhs);
-
-        if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
-            PixelLiteral l = (PixelLiteral) left;
-            PixelLiteral r = (PixelLiteral) right;
-            return new PixelLiteral(l.value - r.value);
-        }
-
-        if (left instanceof PercentageLiteral && right instanceof PercentageLiteral) {
-            PercentageLiteral l = (PercentageLiteral) left;
-            PercentageLiteral r = (PercentageLiteral) right;
-            return new PercentageLiteral(l.value - r.value);
-        }
-        return left;
-    }
-
-    private Literal evalMultiplyOperation(MultiplyOperation expression) {
-        Literal left = evalExpression(expression.lhs);
-        Literal right = evalExpression(expression.rhs);
-
-        if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
-            PixelLiteral l = (PixelLiteral) left;
-            PixelLiteral r = (PixelLiteral) right;
-            return new PixelLiteral(l.value * r.value);
-        }
-
-        if (left instanceof PercentageLiteral && right instanceof PercentageLiteral) {
-            PercentageLiteral l = (PercentageLiteral) left;
-            PercentageLiteral r = (PercentageLiteral) right;
-            return new PercentageLiteral(l.value * r.value);
-        }
-        return left;
-    }
 }
+
+

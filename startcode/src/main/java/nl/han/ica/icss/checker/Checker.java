@@ -17,13 +17,18 @@ public class Checker {
         checkStylesheet(ast.root);
          variableTypes = new LinkedList<>();
 
+
     }
 
     private void checkStylesheet(Stylesheet sheet) {
-        checkStylrule((Stylerule)sheet.getChildren().get(0));
+        for(ASTNode child: sheet.getChildren()) {
+            if (child instanceof Stylerule) {
+                checkStylerule((Stylerule) child);
+            }
+        }
     }
 
-    private void checkStylrule(Stylerule stylerule) {
+    private void checkStylerule(Stylerule stylerule) {
         for(ASTNode child: stylerule.getChildren()){
             if(child instanceof Declaration){
                 checkDeclaration((Declaration) child);

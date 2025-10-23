@@ -1,29 +1,84 @@
 package nl.han.ica.icss.generator;
 
 
-import nl.han.ica.icss.ast.AST;
-import nl.han.ica.icss.ast.Declaration;
-import nl.han.ica.icss.ast.Stylerule;
-import nl.han.ica.icss.ast.Stylesheet;
+import nl.han.ica.icss.ast.*;
+import nl.han.ica.icss.ast.literals.BoolLiteral;
+import nl.han.ica.icss.ast.literals.ColorLiteral;
+import nl.han.ica.icss.ast.literals.PercentageLiteral;
+import nl.han.ica.icss.ast.literals.PixelLiteral;
 
 public class Generator {
 
-	public String generate(AST ast) {
+    public String generate(AST ast) {
         return "/* (c)Quinn Schwachofer*/\n\n" + generateStylesheet(ast.root);
 
 
-	}
+    }
 
     private String generateStylesheet(Stylesheet node) {
-        return generateStylerule((Stylerule)node.getChildren().get(0));
+        StringBuilder result = new StringBuilder();
+
+        for (ASTNode child : node.getChildren()) {
+            if (child instanceof VariableAssignment) {
+                result.append(generateVariable((VariableAssignment) child));
+            } else if (child instanceof Stylerule) {
+                result.append(generateStylerule((Stylerule) child)+ "\n") ;
+            }
+        }
+        return result.toString();
     }
 
-    private String generateStylerule(Stylerule node) { //--> geeft string stylerule en een stylerule is een functie zegmaar (tagselecter + declaration)
-       return node.selectors.get(0).toString() + "{\n" + generateDeclaration((Declaration)node.body.get(0)) + "}"; //--> wij moeten dit met meer doen(lijst bvb). hij heeft er nu maar 1.
+    private String generateVariable(VariableAssignment child) {
+        return child.name.name + ": " + generate(child.expression) + "\n";
     }
+
+    private String generate(Expression expression) {
+        if (expression instanceof PixelLiteral) {
+            PixelLiteral pixel = (PixelLiteral) expression;
+            int value = pixel.value;
+            return value + "px";
+        } else if( expression instanceof PercentageLiteral) {
+            PercentageLiteral percentage = (PercentageLiteral) expression;
+            int value = percentage.value;
+            return value + "%";
+        } else if( expression instanceof ColorLiteral){
+            ColorLiteral color = (ColorLiteral) expression;
+            return color.value;
+        } else if(expression instanceof BoolLiteral){
+            BoolLiteral bool = (BoolLiteral) expression;
+            if(bool.value){
+                return "true";
+            } else {
+                return "false";
+            }
+        }
+
+        return expression.toString();
+    }
+
+    private String generateStylerule(Stylerule node) {
+        StringBuilder decl = new StringBuilder();
+        for(ASTNode child : node.body) {
+            decl.append(generateDeclaration((Declaration) child)) ; //--> wij moeten dit met meer doen(lijst bvb). hij heeft er nu maar 1.
+
+
+        }
+return "\n" + node.selectors.get(0).toString() + "{\n" + decl  + "}";
+        }
 
     private String generateDeclaration(Declaration declaration) {
-        return "declaration\n"; //--> hier nog de declaration ontleden door de property en expression te pakken
+
+        for(ASTNode child: declaration.getChildren()){
+            if(child instanceof PropertyName){
+                PropertyName name = (PropertyName) child;
+                String type = name.name;
+                if(type.equals("width") || type.equals("height") || type.equals("color") || type.equals("background-color")){
+                  String body =  generate(declaration.expression);
+                  return type + ": " + body + ";" + "\n";
+                }
+            }
+        }
+        return "declaration\n";
     }
 
 

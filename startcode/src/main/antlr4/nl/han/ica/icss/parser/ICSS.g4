@@ -80,8 +80,8 @@ stylerule: tagSelector OPEN_BRACE (declaration)+ CLOSE_BRACE;
 declaration:  propertyName COLON expression SEMICOLON;
 
  expression:
-    expression PLUS expression #AddOperation |
     expression MUL expression #MultiplyOperation |
+    expression PLUS expression #AddOperation |
     expression MIN expression #SubtractOperation |
     bool #BoolLiteral |
     PIXELSIZE #PixelLiteral |

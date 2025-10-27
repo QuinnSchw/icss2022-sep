@@ -20,4 +20,3 @@ public interface IHANStack<T> {
     T peek();
 }
 
-//--> hier komt de al gemaakte IHANStack code

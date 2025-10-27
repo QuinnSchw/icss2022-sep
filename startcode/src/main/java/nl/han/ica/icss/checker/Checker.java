@@ -12,7 +12,6 @@ import java.util.LinkedList;
 
 
 public class Checker {
-    // --> was eerst IHANLinkedList. misschien toevoegen
     private LinkedList<HashMap<String, ExpressionType>> variableTypes; // Hashmap houdt bij welke types variabelen zijn. --> handig ook voor het constant probleem
 
     public void check(AST ast) {
@@ -68,6 +67,9 @@ public class Checker {
             if (left == ExpressionType.UNDEFINED || right == ExpressionType.UNDEFINED) {
                 return ExpressionType.UNDEFINED;
             }
+            if (left == ExpressionType.COLOR || right == ExpressionType.COLOR) {
+                return ExpressionType.UNDEFINED;
+            }
 
             if (left == right) {
                 return left;
@@ -82,6 +84,8 @@ public class Checker {
                     (right == ExpressionType.SCALAR && left == ExpressionType.PERCENTAGE)) {
                 return ExpressionType.PERCENTAGE;
             }
+
+
 
             return ExpressionType.UNDEFINED;
         }
@@ -119,9 +123,8 @@ public class Checker {
         } else {
             declaration.setError("This property is not allowed");
         }
-
-
-
-
+        if(type == ExpressionType.UNDEFINED){
+            declaration.setError("Types are undefined or can not be combined");
+        }
     }
 }

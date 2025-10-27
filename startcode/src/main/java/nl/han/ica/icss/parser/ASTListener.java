@@ -8,6 +8,8 @@ import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
+import nl.han.ica.icss.ast.selectors.ClassSelector;
+import nl.han.ica.icss.ast.selectors.IdSelector;
 import nl.han.ica.icss.ast.selectors.TagSelector;
 
 /**
@@ -15,17 +17,18 @@ import nl.han.ica.icss.ast.selectors.TagSelector;
  */
 // mvn compile exec java
 public class ASTListener extends ICSSBaseListener {
-	
-	//Accumulator attributes:
-	private AST ast;
 
-	//Use this to keep track of the parent nodes when recursively traversing the ast
-	private IHANStack<ASTNode> currentContainer;
+    //Accumulator attributes:
+    private AST ast;
 
-	public ASTListener() {
-		ast = new AST();
-		currentContainer = new HANStack<>();
-	}
+    //Use this to keep track of the parent nodes when recursively traversing the ast
+    private IHANStack<ASTNode> currentContainer;
+
+    public ASTListener() {
+        ast = new AST();
+        currentContainer = new HANStack<>();
+    }
+
     public AST getAST() {
         return ast;
     }
@@ -35,6 +38,7 @@ public class ASTListener extends ICSSBaseListener {
         Stylesheet stylesheet = new Stylesheet();
         currentContainer.push(stylesheet);
     }
+
     @Override
     public void enterVariableAssignment(ICSSParser.VariableAssignmentContext ctx) {
         VariableAssignment variableAssignment = new VariableAssignment();
@@ -53,14 +57,13 @@ public class ASTListener extends ICSSBaseListener {
 
     @Override
     public void enterStylerule(ICSSParser.StyleruleContext ctx) {
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            String childText = ctx.getChild(i).getText();
-            System.out.println("Child " + i + ": " + childText);
-        }
+//        for (int i = 0; i < ctx.getChildCount(); i++) {
+//            String childText = ctx.getChild(i).getText();
+//            System.out.println("Child " + i + ": " + childText);
+//        }
         Stylerule stylerule = new Stylerule();
         currentContainer.push(stylerule);
     }
-
 
 
     @Override
@@ -82,10 +85,60 @@ public class ASTListener extends ICSSBaseListener {
     }
 
     @Override
+    public void enterIdSelector(ICSSParser.IdSelectorContext ctx) {
+        IdSelector idSelector = new IdSelector(ctx.getText());
+        currentContainer.push(idSelector);
+    }
+
+    @Override
+    public void exitIdSelector(ICSSParser.IdSelectorContext ctx) {
+        IdSelector idSelector = (IdSelector) currentContainer.pop();
+        currentContainer.peek().addChild(idSelector);
+    }
+
+    @Override
+    public void enterClassSelector(ICSSParser.ClassSelectorContext ctx) {
+        ClassSelector classSelector = new ClassSelector(ctx.getText());
+        currentContainer.push(classSelector);
+    }
+
+    @Override
+    public void exitClassSelector(ICSSParser.ClassSelectorContext ctx) {
+        ClassSelector classSelector = (ClassSelector) currentContainer.pop();
+        currentContainer.peek().addChild(classSelector);
+    }
+
+
+    @Override
     public void exitTagSelector(ICSSParser.TagSelectorContext ctx) {
         TagSelector tagSelector = (TagSelector) currentContainer.pop();
         currentContainer.peek().addChild(tagSelector);
     }
+
+    @Override
+    public void enterIfClause(ICSSParser.IfClauseContext ctx) {
+        IfClause ifClause = new IfClause();
+        currentContainer.push(ifClause);
+    }
+
+    @Override
+    public void exitIfClause(ICSSParser.IfClauseContext ctx) {
+        IfClause ifClause = (IfClause) currentContainer.pop();
+        currentContainer.peek().addChild(ifClause);
+    }
+
+    @Override
+    public void enterElseClause(ICSSParser.ElseClauseContext ctx) {
+        ElseClause elseClause = new ElseClause();
+        currentContainer.push(elseClause);
+    }
+
+    @Override
+    public void exitElseClause(ICSSParser.ElseClauseContext ctx) {
+        ElseClause elseClause = (ElseClause) currentContainer.pop();
+        currentContainer.peek().addChild(elseClause);
+    }
+
 
     @Override
     public void enterDeclaration(ICSSParser.DeclarationContext ctx) {
@@ -135,6 +188,7 @@ public class ASTListener extends ICSSBaseListener {
         PercentageLiteral percentageLiteral = new PercentageLiteral(ctx.getText());
         currentContainer.push(percentageLiteral);
     }
+
     @Override
     public void exitPercentageLiteral(ICSSParser.PercentageLiteralContext ctx) {
         PercentageLiteral literal = (PercentageLiteral) currentContainer.pop();
@@ -146,6 +200,7 @@ public class ASTListener extends ICSSBaseListener {
         PixelLiteral pixelLiteral = new PixelLiteral(ctx.getText());
         currentContainer.push(pixelLiteral);
     }
+
     @Override
     public void exitPixelLiteral(ICSSParser.PixelLiteralContext ctx) {
         PixelLiteral literal = (PixelLiteral) currentContainer.pop();
@@ -153,15 +208,27 @@ public class ASTListener extends ICSSBaseListener {
     }
 
     @Override
-    public void enterAddOperation(ICSSParser.AddOperationContext ctx) {
-        AddOperation operation = new AddOperation();
-        currentContainer.push(operation);
+    public void enterOperation(ICSSParser.OperationContext ctx) {
+        if (ctx.getChild(1).getText().equals("+")) {
+            AddOperation operation = new AddOperation();
+            currentContainer.push(operation);
+        } else if (ctx.getChild(1).getText().equals("-")) {
+            SubtractOperation operation = new SubtractOperation();
+            currentContainer.push(operation);
+        }
+
     }
 
     @Override
-    public void exitAddOperation(ICSSParser.AddOperationContext ctx) {
-        AddOperation operation = (AddOperation) currentContainer.pop();
-        currentContainer.peek().addChild(operation);
+    public void exitOperation(ICSSParser.OperationContext ctx) {
+        if (ctx.getChild(1).getText().equals("+")) {
+            AddOperation operation = (AddOperation) currentContainer.pop();
+            currentContainer.peek().addChild(operation);
+        } else if (ctx.getChild(1).getText().equals("-")) {
+            SubtractOperation operation = (SubtractOperation) currentContainer.pop();
+            currentContainer.peek().addChild(operation);
+        }
+
     }
 
     @Override
@@ -188,17 +255,6 @@ public class ASTListener extends ICSSBaseListener {
         currentContainer.peek().addChild(literal);
     }
 
-    @Override
-    public void enterSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
-        SubtractOperation operation = new SubtractOperation();
-        currentContainer.push(operation);
-    }
-
-    @Override
-    public void exitSubtractOperation(ICSSParser.SubtractOperationContext ctx) {
-        SubtractOperation operation = (SubtractOperation) currentContainer.pop();
-        currentContainer.peek().addChild(operation);
-    }
 
     @Override
     public void exitDeclaration(ICSSParser.DeclarationContext ctx) {
@@ -219,10 +275,8 @@ public class ASTListener extends ICSSBaseListener {
     }
 
 
-
     //
 //    //idSelector exit and enter etc
-
 
 
     //enterselector entertagselector als je een tag gebruikt in de grammatica.

@@ -2,14 +2,13 @@ package nl.han.ica.icss.transforms;
 
 import nl.han.ica.datastructures.IHANLinkedList;
 import nl.han.ica.icss.ast.*;
-import nl.han.ica.icss.ast.literals.ColorLiteral;
-import nl.han.ica.icss.ast.literals.PercentageLiteral;
-import nl.han.ica.icss.ast.literals.PixelLiteral;
-import nl.han.ica.icss.ast.literals.ScalarLiteral;
+import nl.han.ica.icss.ast.literals.*;
 import nl.han.ica.icss.ast.operations.AddOperation;
 import nl.han.ica.icss.ast.operations.MultiplyOperation;
 import nl.han.ica.icss.ast.operations.SubtractOperation;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -32,7 +31,6 @@ public class Evaluator implements Transform {
     }
 
     private void applyStyleSheet(Stylesheet node) {
-
         for (ASTNode child : node.getChildren()) {
             if (child instanceof VariableAssignment) {
                 applyVariableAssignment((VariableAssignment) child);
@@ -43,29 +41,78 @@ public class Evaluator implements Transform {
 
         }
 
-        private void applyStylerule (Stylerule node){
-            variableValues.push(new HashMap<>());
+    private void applyStylerule(Stylerule node) {
+        variableValues.push(new HashMap<>());
 
-            for (ASTNode child : node.getChildren()) {
-                if (child instanceof Declaration) {
-                    applyDeclaration((Declaration) child);
-                } else if (child instanceof VariableAssignment) {
-                    applyVariableAssignment((VariableAssignment) child);
-                }
+        ArrayList<ASTNode> evaluatedBody = new ArrayList<>();
+
+        for (ASTNode child : node.getChildren()) {
+            if (child instanceof VariableAssignment) {
+                applyVariableAssignment((VariableAssignment) child);
+            } else if (child instanceof Declaration) {
+                applyDeclaration((Declaration) child);
+                evaluatedBody.add(child);
+            } else if (child instanceof IfClause) {
+                evaluatedBody.addAll(applyIfClause((IfClause) child));
             }
-
-            variableValues.pop();
         }
 
-        private void applyDeclaration (Declaration node){
+        node.body = evaluatedBody;
+        variableValues.pop();
+    }
+
+    private LinkedList<ASTNode> applyIfClause(IfClause node) {
+        LinkedList<ASTNode> result = new LinkedList<>();
+
+        Literal condition = evalExpression(node.conditionalExpression);
+
+        if (condition instanceof BoolLiteral) {
+            BoolLiteral boolCondition = (BoolLiteral) condition;
+            boolean conditionValue = boolCondition.value;
+
+            if (conditionValue) {
+                variableValues.push(new HashMap<>());
+                for (ASTNode child : node.body) {
+                    if (child instanceof Declaration) {
+                        applyDeclaration((Declaration) child);
+                        result.add(child);
+                    } else if (child instanceof VariableAssignment) {
+                        applyVariableAssignment((VariableAssignment) child);
+                    } else if (child instanceof IfClause) {
+                        result.addAll(applyIfClause((IfClause) child));
+                    }
+                }
+                variableValues.pop();
+            } else if (node.elseClause != null) {
+                variableValues.push(new HashMap<>());
+                for (ASTNode child : node.elseClause.body) {
+                    if (child instanceof Declaration) {
+                        applyDeclaration((Declaration) child);
+                        result.add(child);
+                    } else if (child instanceof VariableAssignment) {
+                        applyVariableAssignment((VariableAssignment) child);
+                    } else if (child instanceof IfClause) {
+                        result.addAll(applyIfClause((IfClause) child));
+                    }
+                }
+                variableValues.pop();
+            }
+        }
+
+        return result;
+    }
+
+    private void applyDeclaration (Declaration node){
             node.expression = evalExpression(node.expression);
         }
 
 
        private void applyVariableAssignment (VariableAssignment node){
-            String varName = node.name.name;
 
            Literal value = evalExpression(node.expression);
+            String varName = node.name.name;
+
+
 
             variableValues.peek().put(varName, value);
        }
@@ -80,27 +127,41 @@ public class Evaluator implements Transform {
                 VariableReference ref = (VariableReference) expression;
                 for (HashMap<String, Literal> scope : variableValues) {
                     if (scope.containsKey(ref.name)) {
-                        return scope.get(ref.name);
+                        Literal value = scope.get(ref.name);
+                    if (value instanceof BoolLiteral) return new BoolLiteral(((BoolLiteral) value).value);
+                    if (value instanceof PixelLiteral) return new PixelLiteral(((PixelLiteral) value).value);
+                    if (value instanceof PercentageLiteral) return new PercentageLiteral(((PercentageLiteral) value).value);
+                    if (value instanceof ScalarLiteral) return new ScalarLiteral(((ScalarLiteral) value).value);
+                    if (value instanceof ColorLiteral) return new ColorLiteral(((ColorLiteral) value).value); // --> checken of dit moet TODO
                     }
                 }
         }
         return (Literal) expression;
     }
 
+
+
     private Literal evalOperation(Operation expression) {
         Literal left = evalExpression(expression.lhs);
         Literal right = evalExpression(expression.rhs);
 
 
+
         if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
             PixelLiteral l = (PixelLiteral) left;
             PixelLiteral r = (PixelLiteral) right;
+            System.out.println(expression);
 
             if (expression instanceof AddOperation) {
+                System.out.println("Add");
                 return new PixelLiteral(l.value + r.value);
             }
             if (expression instanceof SubtractOperation) {
+                System.out.println("Subtract");
                 return new PixelLiteral(l.value - r.value);
+            }
+            if (expression instanceof Operation){
+                System.out.println("Operation");
             }
 
         }
@@ -154,6 +215,23 @@ public class Evaluator implements Transform {
 
             if (expression instanceof MultiplyOperation) {
                 return new PixelLiteral(l.value * r.value);
+            }
+
+        }
+        if (left instanceof ScalarLiteral && right instanceof ScalarLiteral) {
+
+            ScalarLiteral l = (ScalarLiteral) left;
+            ScalarLiteral r = (ScalarLiteral) right;
+            System.out.println("expressie"+ expression);
+
+            if (expression instanceof MultiplyOperation) {
+                return new ScalarLiteral(l.value * r.value);
+            }
+            if (expression instanceof AddOperation) {
+                return new PercentageLiteral(l.value + r.value);
+            }
+            if (expression instanceof SubtractOperation) {
+                return new PercentageLiteral(l.value - r.value);
             }
 
         }

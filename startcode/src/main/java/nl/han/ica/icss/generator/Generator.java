@@ -19,18 +19,14 @@ public class Generator {
         StringBuilder result = new StringBuilder();
 
         for (ASTNode child : node.getChildren()) {
-            if (child instanceof VariableAssignment) {
-                result.append(generateVariable((VariableAssignment) child));
-            } else if (child instanceof Stylerule) {
+            if (child instanceof Stylerule) {
                 result.append(generateStylerule((Stylerule) child)+ "\n") ;
             }
         }
         return result.toString();
     }
 
-    private String generateVariable(VariableAssignment child) {
-        return child.name.name + ": " + generate(child.expression) + "\n";
-    }
+
 
     private String generate(Expression expression) {
         if (expression instanceof PixelLiteral) {
@@ -59,12 +55,25 @@ public class Generator {
     private String generateStylerule(Stylerule node) {
         StringBuilder decl = new StringBuilder();
         for(ASTNode child : node.body) {
-            decl.append(generateDeclaration((Declaration) child)) ; //--> wij moeten dit met meer doen(lijst bvb). hij heeft er nu maar 1.
-
+            if(child instanceof Declaration) {
+                decl.append(generateDeclaration((Declaration) child)); //--> wij moeten dit met meer doen(lijst bvb). hij heeft er nu maar 1.
+            } else if(child instanceof IfClause){
+                decl.append(generateIfClause((IfClause)child));
+            }
 
         }
 return "\n" + node.selectors.get(0).toString() + "{\n" + decl  + "}";
         }
+
+    private String generateIfClause(IfClause child) {
+//        for(ASTNode node : child.body) {
+//            System.out.println("body" + node);
+//
+//        }
+//        System.out.println("conex" + child.conditionalExpression.getNodeLabel());
+//        System.out.println("else"+ child.elseClause);
+        return "";
+    }
 
     private String generateDeclaration(Declaration declaration) {
 
@@ -74,7 +83,7 @@ return "\n" + node.selectors.get(0).toString() + "{\n" + decl  + "}";
                 String type = name.name;
                 if(type.equals("width") || type.equals("height") || type.equals("color") || type.equals("background-color")){
                   String body =  generate(declaration.expression);
-                  return type + ": " + body + ";" + "\n";
+                  return " " + " " + type + ": " + body + ";" + "\n";
                 }
             }
         }

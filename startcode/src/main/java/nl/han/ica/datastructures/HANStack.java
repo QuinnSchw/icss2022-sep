@@ -15,14 +15,13 @@ public class HANStack <T> implements IHANStack<T>{
 
     @Override
     public T pop() {
-        T value = HANLijst.getLast();
-        HANLijst.removeLast();
+        T value = HANLijst.get(HANLijst.size() - 1);
+        HANLijst.remove(HANLijst.size() - 1);
         return value;
     }
 
     @Override
     public T peek() {
-        T value = HANLijst.getLast();
-        return value;
+        return HANLijst.get(HANLijst.size() - 1);
     }
 }

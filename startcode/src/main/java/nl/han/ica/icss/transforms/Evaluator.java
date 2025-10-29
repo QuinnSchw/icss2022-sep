@@ -16,10 +16,6 @@ public class Evaluator implements Transform {
 
     private LinkedList<HashMap<String, Literal>> variableValues;
 
-    public Evaluator() {
-        variableValues = new LinkedList<>();
-    }
-
     @Override
     public void apply(AST ast) {
         variableValues = new LinkedList<>();
@@ -35,11 +31,11 @@ public class Evaluator implements Transform {
             if (child instanceof VariableAssignment) {
                 applyVariableAssignment((VariableAssignment) child);
             } else if (child instanceof Stylerule) {
-                    applyStylerule((Stylerule) child);
-                }
+                applyStylerule((Stylerule) child);
             }
-
         }
+
+    }
 
     private void applyStylerule(Stylerule node) {
         variableValues.push(new HashMap<>());
@@ -102,20 +98,19 @@ public class Evaluator implements Transform {
         return result;
     }
 
-    private void applyDeclaration (Declaration node){
-            node.expression = evalExpression(node.expression);
-        }
+    private void applyDeclaration(Declaration node) {
+        node.expression = evalExpression(node.expression);
+    }
 
 
-       private void applyVariableAssignment (VariableAssignment node){
+    private void applyVariableAssignment(VariableAssignment node) {
 
-           Literal value = evalExpression(node.expression);
-            String varName = node.name.name;
+        Literal value = evalExpression(node.expression);
+        String varName = node.name.name;
 
 
-
-            variableValues.peek().put(varName, value);
-       }
+        variableValues.peek().put(varName, value);
+    }
 
 
     private Literal evalExpression(Expression expression) {
@@ -124,27 +119,20 @@ public class Evaluator implements Transform {
         } else if (expression instanceof Operation) {
             return evalOperation((Operation) expression);
         } else if (expression instanceof VariableReference) {
-                VariableReference ref = (VariableReference) expression;
-                for (HashMap<String, Literal> scope : variableValues) {
-                    if (scope.containsKey(ref.name)) {
-                        Literal value = scope.get(ref.name);
-                    if (value instanceof BoolLiteral) return new BoolLiteral(((BoolLiteral) value).value);
-                    if (value instanceof PixelLiteral) return new PixelLiteral(((PixelLiteral) value).value);
-                    if (value instanceof PercentageLiteral) return new PercentageLiteral(((PercentageLiteral) value).value);
-                    if (value instanceof ScalarLiteral) return new ScalarLiteral(((ScalarLiteral) value).value);
-                    if (value instanceof ColorLiteral) return new ColorLiteral(((ColorLiteral) value).value); // --> checken of dit moet TODO
-                    }
+            VariableReference ref = (VariableReference) expression;
+            for (HashMap<String, Literal> scope : variableValues) {
+                if (scope.containsKey(ref.name)) {
+                    return scope.get(ref.name);
                 }
+            }
         }
         return (Literal) expression;
     }
 
 
-
     private Literal evalOperation(Operation expression) {
         Literal left = evalExpression(expression.lhs);
         Literal right = evalExpression(expression.rhs);
-
 
 
         if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
@@ -160,7 +148,7 @@ public class Evaluator implements Transform {
                 System.out.println("Subtract");
                 return new PixelLiteral(l.value - r.value);
             }
-            if (expression instanceof Operation){
+            if (expression instanceof Operation) {
                 System.out.println("Operation");
             }
 
@@ -222,7 +210,7 @@ public class Evaluator implements Transform {
 
             ScalarLiteral l = (ScalarLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
-            System.out.println("expressie"+ expression);
+            System.out.println("expressie" + expression);
 
             if (expression instanceof MultiplyOperation) {
                 return new ScalarLiteral(l.value * r.value);

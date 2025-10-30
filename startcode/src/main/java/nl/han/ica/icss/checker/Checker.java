@@ -10,7 +10,7 @@ import java.util.LinkedList;
 
 
 public class Checker {
-    private LinkedList<HashMap<String, ExpressionType>> variableTypes; // Hashmap houdt bij welke types variabelen zijn. --> handig ook voor het constant probleem
+    private LinkedList<HashMap<String, ExpressionType>> variableTypes;
 
     public void check(AST ast) {
         variableTypes = new LinkedList<>();
@@ -48,9 +48,8 @@ public class Checker {
             return ExpressionType.SCALAR;
         } else if (expression instanceof VariableReference) {
             VariableReference ref = (VariableReference) expression;
-            for (HashMap<String, ExpressionType> scope : variableTypes) {
+            for (HashMap<String, ExpressionType> scope : variableTypes) { //Loopt door hashmap heen en returnt de ExpressionType die bij de gevonden key hoort
                 if (scope.containsKey(ref.name)) {
-                    System.out.println(scope.get(ref.name));
                     return scope.get(ref.name);
                 }
             }
@@ -58,42 +57,33 @@ public class Checker {
 
         } else if (expression instanceof Operation) {
             Operation op = (Operation) expression;
-
             ExpressionType left = determineType(op.lhs);
             ExpressionType right = determineType(op.rhs);
-
             ExpressionType check = checkEval(left, right, expression);
 
             if (check == ExpressionType.WRONGEVAL) {
                 return ExpressionType.WRONGEVAL;
             }
-
             if (left == ExpressionType.UNDEFINED || right == ExpressionType.UNDEFINED) {
                 return ExpressionType.UNDEFINED;
             }
-
             if (left == right) {
                 return left;
             }
-
             if ((left == ExpressionType.SCALAR && right == ExpressionType.PIXEL) ||
                     (right == ExpressionType.SCALAR && left == ExpressionType.PIXEL)) {
                 return ExpressionType.PIXEL;
             }
-
             if ((left == ExpressionType.SCALAR && right == ExpressionType.PERCENTAGE) ||
                     (right == ExpressionType.SCALAR && left == ExpressionType.PERCENTAGE)) {
                 return ExpressionType.PERCENTAGE;
             }
-
-
             return ExpressionType.UNDEFINED;
         }
-
         return ExpressionType.UNDEFINED;
     }
 
-    private ExpressionType checkEval(ExpressionType left, ExpressionType right, Expression expression) {
+    private ExpressionType checkEval(ExpressionType left, ExpressionType right, Expression expression) { //Hierin check ik of een som wel/niet kan. Zo niet dan return ik WRONGEVAL
         if (expression instanceof AddOperation) {
             if (left == ExpressionType.COLOR || right == ExpressionType.COLOR) {
                 return ExpressionType.WRONGEVAL;
@@ -121,7 +111,6 @@ public class Checker {
 
             }
         }
-
         return ExpressionType.UNDEFINED;
     }
 
@@ -138,7 +127,6 @@ public class Checker {
                 checkIfClause((IfClause) child);
             }
         }
-
         variableTypes.pop();
     }
 
@@ -154,11 +142,11 @@ public class Checker {
         String property = declaration.property.name;
         if (property.equals("width") || property.equals("height")) {
             if (type != ExpressionType.PIXEL && type != ExpressionType.PERCENTAGE) {
-                declaration.setError("Property width: not allowed"); //--> hierdoor wordt declaration dan rood in de tree
+                declaration.setError("Property width: not allowed");
             }
         } else if (property.equals("color") || property.equals("background-color")) {
             if (type != ExpressionType.COLOR) {
-                declaration.setError("Property color: this is not allowed"); //--> je moet nakijken of iets hetgeen is wat je verwacht. Anders foutmelding.
+                declaration.setError("Property color: this is not allowed");
             }
         } else {
             declaration.setError("This property is not allowed");

@@ -15,13 +15,9 @@ import nl.han.ica.icss.ast.selectors.TagSelector;
 /**
  * This class extracts the ICSS Abstract Syntax Tree from the Antlr Parse tree.
  */
-// mvn compile exec java
+
 public class ASTListener extends ICSSBaseListener {
-
-    //Accumulator attributes:
     private AST ast;
-
-    //Use this to keep track of the parent nodes when recursively traversing the ast
     private IHANStack<ASTNode> currentContainer;
 
     public ASTListener() {
@@ -45,7 +41,6 @@ public class ASTListener extends ICSSBaseListener {
         currentContainer.push(variableAssignment);
 
         VariableReference variableReference = new VariableReference(ctx.getChild(0).getText());
-        System.out.println("reference=" + variableReference);
         variableAssignment.name = variableReference;
     }
 
@@ -57,14 +52,9 @@ public class ASTListener extends ICSSBaseListener {
 
     @Override
     public void enterStylerule(ICSSParser.StyleruleContext ctx) {
-//        for (int i = 0; i < ctx.getChildCount(); i++) {
-//            String childText = ctx.getChild(i).getText();
-//            System.out.println("Child " + i + ": " + childText);
-//        }
         Stylerule stylerule = new Stylerule();
         currentContainer.push(stylerule);
     }
-
 
     @Override
     public void enterVariableReference(ICSSParser.VariableReferenceContext ctx) {
@@ -208,7 +198,7 @@ public class ASTListener extends ICSSBaseListener {
     }
 
     @Override
-    public void enterOperation(ICSSParser.OperationContext ctx) {
+    public void enterOperation(ICSSParser.OperationContext ctx) { // Checkt of het een plus of min is om zo het juiste te pushen.
         if (ctx.getChild(1).getText().equals("+")) {
             AddOperation operation = new AddOperation();
             currentContainer.push(operation);
@@ -273,18 +263,4 @@ public class ASTListener extends ICSSBaseListener {
         Stylesheet stylesheet = (Stylesheet) currentContainer.pop();
         ast.setRoot(stylesheet);
     }
-
-
-    //
-//    //idSelector exit and enter etc
-
-
-    //enterselector entertagselector als je een tag gebruikt in de grammatica.
-    // selector: LOWERIDENT #tagselector | CLASSIDENT #classident | IDIDENT #idSelector
-
-//public void enterTagSelector(ICSSParser.TagSelectorContext ctx) { --> dit doe je ook voor class en id
-
-//        Stylerule stylerule = new Stylerule();
-//        currentContainer.push(stylerule);
-//    }
 }

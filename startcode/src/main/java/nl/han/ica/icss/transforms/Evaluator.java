@@ -22,8 +22,6 @@ public class Evaluator implements Transform {
         variableValues.push(new HashMap<>());
         applyStyleSheet(ast.root);
         variableValues.pop();
-
-
     }
 
     private void applyStyleSheet(Stylesheet node) {
@@ -34,7 +32,6 @@ public class Evaluator implements Transform {
                 applyStylerule((Stylerule) child);
             }
         }
-
     }
 
     private void applyStylerule(Stylerule node) {
@@ -52,14 +49,12 @@ public class Evaluator implements Transform {
                 evaluatedBody.addAll(applyIfClause((IfClause) child));
             }
         }
-
         node.body = evaluatedBody;
         variableValues.pop();
     }
 
-    private LinkedList<ASTNode> applyIfClause(IfClause node) {
+    private LinkedList<ASTNode> applyIfClause(IfClause node) {//Hier wordt gecheckt of hij in de if of else moet komen. Daarbij worden nieuwe hashmaps aangemaakt om zo de goede scope te behouden bij het aanmaken/aanroepen van variabelen.
         LinkedList<ASTNode> result = new LinkedList<>();
-
         Literal condition = evalExpression(node.conditionalExpression);
 
         if (condition instanceof BoolLiteral) {
@@ -94,7 +89,6 @@ public class Evaluator implements Transform {
                 variableValues.pop();
             }
         }
-
         return result;
     }
 
@@ -102,16 +96,11 @@ public class Evaluator implements Transform {
         node.expression = evalExpression(node.expression);
     }
 
-
     private void applyVariableAssignment(VariableAssignment node) {
-
         Literal value = evalExpression(node.expression);
         String varName = node.name.name;
-
-
         variableValues.peek().put(varName, value);
     }
-
 
     private Literal evalExpression(Expression expression) {
         if (expression instanceof Literal) {
@@ -130,32 +119,22 @@ public class Evaluator implements Transform {
     }
 
 
-    private Literal evalOperation(Operation expression) {
+    private Literal evalOperation(Operation expression) { //Hier doe ik elke operation. Dit is lelijke code, maar was voor nu prima.
         Literal left = evalExpression(expression.lhs);
         Literal right = evalExpression(expression.rhs);
-
 
         if (left instanceof PixelLiteral && right instanceof PixelLiteral) {
             PixelLiteral l = (PixelLiteral) left;
             PixelLiteral r = (PixelLiteral) right;
-            System.out.println(expression);
 
             if (expression instanceof AddOperation) {
-                System.out.println("Add");
                 return new PixelLiteral(l.value + r.value);
             }
             if (expression instanceof SubtractOperation) {
-                System.out.println("Subtract");
                 return new PixelLiteral(l.value - r.value);
             }
-            if (expression instanceof Operation) {
-                System.out.println("Operation");
-            }
-
         }
-
         if (left instanceof PercentageLiteral && right instanceof PercentageLiteral) {
-
             PercentageLiteral l = (PercentageLiteral) left;
             PercentageLiteral r = (PercentageLiteral) right;
 
@@ -167,50 +146,40 @@ public class Evaluator implements Transform {
             }
         }
         if (left instanceof ScalarLiteral && right instanceof PercentageLiteral) {
-
             ScalarLiteral l = (ScalarLiteral) left;
             PercentageLiteral r = (PercentageLiteral) right;
 
             if (expression instanceof MultiplyOperation) {
                 return new PercentageLiteral(l.value * r.value);
             }
-
         }
         if (left instanceof PercentageLiteral && right instanceof ScalarLiteral) {
-
             PercentageLiteral l = (PercentageLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
 
             if (expression instanceof MultiplyOperation) {
                 return new PercentageLiteral(l.value * r.value);
             }
-
         }
         if (left instanceof ScalarLiteral && right instanceof PixelLiteral) {
-
             ScalarLiteral l = (ScalarLiteral) left;
             PixelLiteral r = (PixelLiteral) right;
 
             if (expression instanceof MultiplyOperation) {
                 return new PixelLiteral(l.value * r.value);
             }
-
         }
         if (left instanceof PixelLiteral && right instanceof ScalarLiteral) {
-
             PixelLiteral l = (PixelLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
 
             if (expression instanceof MultiplyOperation) {
                 return new PixelLiteral(l.value * r.value);
             }
-
         }
         if (left instanceof ScalarLiteral && right instanceof ScalarLiteral) {
-
             ScalarLiteral l = (ScalarLiteral) left;
             ScalarLiteral r = (ScalarLiteral) right;
-            System.out.println("expressie" + expression);
 
             if (expression instanceof MultiplyOperation) {
                 return new ScalarLiteral(l.value * r.value);
@@ -221,10 +190,8 @@ public class Evaluator implements Transform {
             if (expression instanceof SubtractOperation) {
                 return new PercentageLiteral(l.value - r.value);
             }
-
         }
         return null;
-
     }
 }
 
